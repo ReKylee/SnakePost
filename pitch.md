@@ -1,37 +1,49 @@
 # Pitch: [Game name]
 
-> **What I expect from your game**
-> - **Genre:** hybrid-casual, Android, portrait, played with one thumb. Theme and genre are your choice.
->   Ideas: sort puzzles (Hexa Sort, Water Sort), block puzzles (Block Blast), merge games, one-thumb runners (Subway Surfers), stacking or timing games (Stack), one-thumb action with upgrades (Archero), idle tap games.
-> - **Core loop:** one simple mechanic that is fun in seconds.
-> - **Meta:** a currency and something to spend it on (upgrades, unlocks, a place to build).
-> - **Sessions:** 1–3 minutes.
-> - **Goals:** clear things the player achieves (finish a level, reach a score, unlock an upgrade). Progress you could count.
-> - **Size:** about 3 levels for one person. Bigger team, bigger game: a team of 2–3 builds more (extra levels or an extra system), agreed after the pitch. This is a software engineering course: put your effort into the code, the systems and the data, not into content.
-> - **Look:** placeholder or free art is fine. Fun matters more than looks.
-
-Keep it to one page. Short answers are fine.
+Genre: Roguelike, hybrid-casual arcade
+Platform: Android
+Format: Portrait, one thumb
 
 ## Core loop
-What does the player do again and again, with one thumb?
+
+It's Snake with a roguelike delivery twist. Steer an always-moving snake,
+collect parcels from residents, and grow longer with every pickup. Deliver them
+to matching addresses to shrink, earn coins, and push the run forward. Hit
+delivery milestones to choose from randomized upgrades, then adapt as sudden
+hazards and boss encounters turn your route into chaos. Keep delivering and
+building your snake until you run out of lives.
 
 ## Meta
-What do they earn, spend and unlock?
+
+Bank coins and career XP between runs. Buy permanent PowerUps, unlock and
+upgrade perks, and experiment with starting loadouts. Passive perks use perk
+slots; stronger cargo modules occupy precious package space.
 
 ## Why come back?
-Which 2 hooks bring players back tomorrow? (daily reward, streak, event, lives, collection, notification…)
+
+* Daily Mail Room: Swipe envelopes into six matching bins in a 30-second sorting challenge for coins and XP.
+
+* Daily challenges: Take on changing delivery or survival objectives for bonus rewards.
 
 ## Who and when
-Who plays it, where, and how long is one session? (target: 1–3 minutes)
+
+Players who want quick roguelike runs with one-thumb controls. Android portrait,
+1–3 minute sessions, could be longer depending on the player's survival.
 
 ## Goals
-What does the player achieve? List the moments of progress (level completed, upgrade unlocked, new record…).
+
+Reach delivery milestones, assemble stronger run builds, survive random events,
+defeat bosses, beat personal bests, and climb postal career ranks.
 
 ## Feel
-What will feel "crunchy"? (sound, motion, particles, haptics, timing, numbers)
+
+Parcels click onto your tail; deliveries snap segments away. Upgrade choices
+interrupt the chaos with exciting new possibilities, while hazard warnings, coin
+bursts, sharp audio, and haptics punctuate every close call.
 
 ## Scope check
-- [ ] Hybrid-casual: simple core + a meta layer
-- [ ] Portrait, one thumb
-- [ ] 1–3 minute sessions
-- [ ] Small: about 3 levels (more for a team of 2–3)
+
+* [x] Hybrid-casual: simple core + a meta layer
+* [x] Portrait, one thumb
+* [x] 1–3 minute sessions [If you really suck at this game yeah sure.]
+* [x] Small: about 3 levels (more for a team of 2–3) [It's based on sessions/runs, not levels.]
