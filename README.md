@@ -1,4 +1,4 @@
-# SnakePost
+# Snake Post (working title)
 
 **Team:** Kylee Benisty | Peleg Ben Dor
 **Course:** Mobile Game Development, Shenkar

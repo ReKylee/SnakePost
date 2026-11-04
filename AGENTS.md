@@ -3,129 +3,72 @@
 AI tools read this file before working on the repo. Keep it short, true and up to date.
 Claude Code reads it through `CLAUDE.md`, which contains one line: `@AGENTS.md`.
 
-## The game
+## Project and sources
 
-Snake-post is a roguelike, hybrid-casual take on Snake for Android, played in portrait with one thumb. The snake always moves forward on an open field (no grid), and the player steers it with a virtual joystick. It picks up parcels from residents and grows one segment per parcel, then delivers each parcel to the address with the matching shape, which removes that segment and pays coins. Delivery milestones offer a choice of three random run upgrades. Deliveries can also trigger random hazards (holes, earthquakes, wind) and, past a threshold, a boss. The run ends when lives run out. Between runs the player spends coins in the shop, picks a loadout of perks and modules, plays a daily 30-second mail-sorting minigame (the Mail Room), and earns career XP towards postal ranks.
+Snake Post is a portrait Android Snake roguelike. Players steer continuously, collect Parcels as body segments, deliver them to matching addresses, choose Upgrades, and progress through a shop, career system, and the separate PostShift sorting minigame.
 
-## Terms
+- `DECISIONS.md` records explicit game-design decisions. Follow the latest applicable decision.
+- `Parcel_Snake_GDD.typ` is a **game-design planning document**. Use it to understand intended gameplay, terminology, and constraints. It is **not** an implementation specification: its diagrams, suggested architecture, balancing numbers, equations, and example formulas do not prescribe code structure or exact algorithms.
+- `README.md` and `pitch.md` provide project overview and presentation context.
+- Read the relevant material and existing code, callers, tests, and project settings before editing. Prefer working behavior and confirmed decisions over speculative prose. Flag material conflicts; otherwise choose a sensible implementation without asking about every unspecified detail.
+- Do not rewrite the GDD to justify an implementation or treat tentative design ideas as locked requirements. Keep documentation changes within the requested scope.
 
-Use these words in code, UI and docs.
+At present this repository contains design documents but no Unity project. The intended target is Unity 6 on Android, in portrait; GameObjects and 2D physics are the initial direction. Once a project exists, check its actual Unity version, scripting support, package manifest, and conventions rather than relying on this snapshot.
 
-| Term                          | Meaning                                                                                              |
-| ----------------------------- | ---------------------------------------------------------------------------------------------------- |
-| Parcel                        | A package carried on the snake.                                                                      |
-| Capacity                      | Package slots on the snake, shared by parcels and cargo modules. Hard-capped so the snake stays steerable on a phone. |
-| Passive perk                  | Always-on bonus. Uses a passive slot (one, a second unlockable), no capacity.                        |
-| Cargo module                  | Stronger ability that rides on the snake as a segment. Uses one package slot and is never delivered. |
-| Tier                          | Upgrade level of an owned perk or module, bought in the shop with coins.                             |
-| PowerUp                       | Permanent shop stat upgrade with repeatable ranks (starting capacity, starting lives).               |
-| Run upgrade                   | Random pick-one-of-three upgrade at a delivery milestone. Timed, or lasts until the run ends. Never permanent. |
-| Event                         | Random hazard rolled after a delivery. Timed or run-long. Bosses last until defeated.                |
-| Shift                         | One 30-second Mail Room round. One free per day; more need a shift ticket.                           |
-| Career XP, level, postal rank | Persistent progression, separate from coins. Postal rank sets the Mail Room salary.                  |
+## Gameplay vocabulary
 
-"Rank" alone is ambiguous: write "PowerUp rank" or "postal rank".
+| Term | Meaning |
+| --- | --- |
+| **Parcel** | A deliverable item carried as a removable snake segment; consumes Capacity. |
+| **Capacity** | Shared limit for carried Parcels and equipped Cargo Perks. |
+| **Upgrade / Effect** | An acquirable Upgrade configures one or more gameplay Effects. Its grant source does not determine Effect lifetime. |
+| **Upgrade Tier** | A configured strength or behavior stage of an Upgrade, including repeatable improvements. |
+| **Passive Perk / Cargo Perk** | Equipment classifications of Perks (equippable Upgrades). Passive Perks use passive slots; Cargo Perks reserve Capacity and remain visible, non-deliverable segments. |
+| **Event** | A world occurrence such as wind, an earthquake, or a boss encounter. |
+| **PostShift** | Separate 30-second sorting minigame; a shift is one attempt. |
+| **Career XP / Career Level / Postal Rank** | Persistent experience, numerical level, and named rank; separate from Coins. |
 
-## Docs
+Use these terms consistently, but **do not create separate class hierarchies, Effect pipelines, or state models just to mirror UI labels**. For example, acquisition from the shop and acquisition during a run can use the same Upgrade definition.
 
-1. `Parcel_Snake_GDD.typ`: the full design spec (Typst source, read it as text). Its numbers are illustrative, not balanced. The section "Key invariants for engineering and QA" lists rules the code must keep.
-2. `DECISIONS.md`: decisions the team has made, newest first.
-3. `ArchitectureResearch.md`: research comparing architecture options.
-4. `pitch.md`: the one-page pitch.
+## Engineering approach
 
-## Tech
+- Follow Ponytail's practical YAGNI discipline: understand the real workflow, reuse existing code, prefer C# and Unity's built-in facilities, then implement the smallest complete solution. Simplicity must never remove requested behavior, validation, or a necessary test.
+- Prefer cohesive, domain-oriented code for snake movement, Parcels/deliveries, Upgrades/Effects, events, progression/economy, shop, and PostShift. Avoid generic technical layers and classes whose only purpose is forwarding calls.
+- Unity-native by default: GameObjects, MonoBehaviours, Prefabs, ScriptableObjects, and appropriate Unity physics APIs. A data-oriented design does not require ECS/DOTS. Adopt Jobs, Burst, custom simulation, or additional packages only for a demonstrated need.
+- Make content resource-driven. Prefer one authoritative authored definition for each Parcel, Upgrade, Tier, Event, etc. ScriptableObjects are a good default for reusable content, with behavior composed from configured Effects where that is actually useful.
+- Keep **one owner for each mutable state**. Treat authored definitions as read-only during play; run state belongs to the run and resets between runs; persistent progression belongs to the save/profile. Do not mirror Unity transforms, duplicate inventories, or invent registries and caches without a reason.
+- Separate domains through small, explicit APIs. Use direct references and calls for ordinary dependencies. Add events, interfaces, or shared coordination only when concrete interactions require them; avoid premature event buses, service locators, global managers, and redundant initialization frameworks.
+- Keep shared rules shared, but do not build a universal Effect language or configurable framework before actual content needs it. New content with existing behavior should generally be authorable without new code.
+- Prefer composition and ordinary C# types. Use MonoBehaviours for Unity-facing state and lifecycle; plain C# for rules that benefit from independent testing. Split components when responsibilities genuinely differ, not to enforce a component count.
+- Design for mobile responsiveness and maintainability. Avoid repeated searches, `GetComponent`, and avoidable allocations in hot loops; cache references or inject them at setup. Profile representative Android devices before adding complex optimizations. LINQ and allocations outside hot paths are fine when clear.
+- Treat Addressables, backend services, IAP, ads, and cloud features as integration choices to make when implementing those features. Do not install SDKs or commit to a provider based only on a design draft.
 
-- Engine: Unity 6.7 (`6000.7.x`). It compiles C# 9 against .NET Standard 2.1.
-- Target: Android only, portrait, one thumb. The GDD cites Apple guidelines, but there is no iOS build.
-- Physics: Physics2D (assumed in `ArchitectureResearch.md`).
-- Packages: none added yet.
-- Services: the GDD plans ads (it cites AdMob), IAP, cloud saves and leaderboards. None chosen yet.
+## Gameplay behavior and correctness
 
-## Architecture
+- Preserve the intended pickup/delivery loop: collecting a Parcel adds a carried segment when Capacity permits; delivering it removes the appropriate segment and awards the delivery reward. Cargo Perks reserve Capacity but are not delivered.
+- Enforce equipment and Capacity limits according to the current game rules and authored configuration. Do not hard-code speculative caps or require exact GDD arithmetic for balance curves, payouts, or progression.
+- Effects activate and expire according to their configured behavior and lifetime, independent of where the Upgrade came from.
+- A new run starts with fresh run-specific state. Do not rely on scene loading to reset gameplay or leave active effects/subscriptions behind.
+- Avoid duplicate rewards and repeated purchase fulfillment. When real-money purchasing or online balances are implemented, validate transactions with the authoritative service and never trust client-submitted balances.
+- Do not interrupt active steering with unsolicited shop or ad modals; pause gameplay appropriately when a blocking UI is shown.
+- Write focused tests for consequential rules and regressions. Test observable behavior and edge cases, rather than reproducing illustrative GDD calculations verbatim.
 
-No Unity project or code yet. The Unity project will live at the repo root (`.gitignore` expects `Library/` there). Nothing in `ArchitectureResearch.md` is final. The direction so far:
+## C# and Unity conventions
 
-- Unity-native first: GameObjects, MonoBehaviours, Physics2D, Prefabs. No second simulation that keeps its own copy of what Unity already tracks (positions, colliders).
-- Content is data. Parcels, perks, modules, run upgrades, events and bosses are ScriptableObject definitions. A new item of an existing kind should need no new code.
-- Composition over inheritance. Perks, modules, run upgrades and events share one effect system.
-- Every piece of state has one owner. Three kinds, kept apart:
-    - Definitions (ScriptableObjects): authored in the Editor, read-only at runtime.
-    - Run state: created when a run starts, discarded when it ends (carried parcels, run upgrades, lives, active events).
-    - Save data: kept between runs (wallet, career XP, owned perks and tiers, PowerUp ranks, tickets, daily flags).
-- Domains: snake and movement; parcels and deliveries; abilities and effects; world events and bosses; career and currency; shop and unlocks; Mail Room. Each owns its data. Add events or interfaces between domains only when a real need shows up.
+- Follow conventions already established in code. Until then: PascalCase for types/methods/properties; `IName` for interfaces; `_camelCase` for private fields; camelCase for locals and parameters; Allman braces.
+- **Namespace consistency is mandatory.** All first-party C# code uses `SnakePost` as its root namespace, never `SnakeMail` or the global namespace. Place each gameplay domain consistently under `SnakePost.<Domain>` (e.g. `SnakePost.Delivery`, `SnakePost.PostShift`); reserve `SnakePost` itself for genuinely shared types. Keep editor and test code under the same root. Namespace boundaries follow cohesive domains, not every folder level; do not mix root and domain namespaces arbitrarily. Name public MonoBehaviour/ScriptableObject files after their types; keep small related helpers together when clearer.
+- Prefer `[SerializeField] private` for Inspector configuration. Expose only the API other code actually needs. Do not add `[FormerlySerializedAs]` routinely; use it only when a field rename must preserve important existing scene, prefab, or asset values.
+- Respect Unity lifecycle and ownership: initialize required references once, pair subscriptions with unsubscriptions, and avoid hidden initialization order assumptions. Use `[RequireComponent]` or validation when they prevent real errors.
+- ScriptableObject definitions are assets, not per-run mutable containers. Keep cooldowns, charges, and active instances in runtime state.
+- Use named configuration for values designers will tune; simple mathematical literals and self-evident constants do not need ceremonial wrappers. Use supported C# and Unity APIs for the actual installed editor version.
+- Comments explain intent, non-obvious constraints, and pitfalls. Remove dead/commented-out code. Log actionable failures with context; avoid per-frame log noise.
+- Preserve asset GUIDs and `.meta` files when adding, renaming, or moving Unity assets. Use the Editor where useful, but safe file operations are allowed if references and metadata remain valid. Do not make the user perform Editor steps that available tools can do.
 
-Still open (ask before deciding): ECS/DOTS or GameObjects for the snake body; the movement algorithm (trajectory following was discussed); how effects are expressed (stat modifiers, triggers and actions, `[SerializeReference]`); Addressables and downloadable content; save system and backend; ad and IAP SDKs; scenes and init order.
+## Working practices and tools
 
-Rules the code must keep (from the GDD):
-
-- With capacity `C`, equipped modules `R`, carried parcels `P`, passive slots `S` and equipped passive perks `A`: `R + P <= C`, `R <= C - 2`, `A <= S <= 2`, and `C` never exceeds the mobile cap. Modules are never delivered or detached mid-run.
-- Coins are paid on delivery, never on pickup. Every reward (delivery, shift, challenge, ad, results screen) is credited exactly once, even after a retry, an app suspend or a second visit to the screen.
-- Run upgrades end with the run. Their UI says "Until end of run", never "Permanent".
-- No ads, shop prompts or full-screen modals during active steering. The snake never keeps moving behind a modal.
-- Perks and modules never affect the Mail Room. A shift's postal rank is fixed when the shift starts.
-- The XP curve and each payout formula live in one function each, using the GDD's exact integer math.
-
-## Rules for AI
-
-- Follow the existing folder structure and naming. Don't create new top-level folders.
-- Don't invent APIs. If unsure about an SDK or Unity API, say so and point to the docs.
-- Don't change Player Settings, package name, API levels or build settings unless asked.
-- Keep changes small and explain what you changed and why.
-- Never commit secrets (keystores, passwords, API keys).
-- Read the GDD section for the system you are touching before writing code. Where the docs leave something open or disagree with each other, say so and ask instead of deciding.
-- Every number in the GDD is a tuning placeholder. Put it in a config asset or a named constant, never inline.
-- Don't add packages (Entities, Burst, Addressables, tweening libraries) or SDKs, and don't build frameworks the team hasn't chosen (event bus, service locator, effect scripting language), unless asked.
-- Create, move and rename assets only in the Unity Editor: Unity tracks assets by the GUID in their `.meta` files. Creating new `.cs` files is fine.
-- You can't use the Unity Editor. When a change needs Editor work (assign a serialized field, add a component, create a ScriptableObject asset), end the reply with numbered steps under "In Unity": which GameObject or asset, which component, which field, what value.
-
-## Conventions
-
-### C# code
-
-- Unity compiles C# 9 against .NET Standard 2.1. Don't use `record struct`, file-scoped namespaces, `global using`, `required` members or raw string literals. `record` classes and `init` setters need an `IsExternalInit` stub; skip them unless the team adds it.
-- Naming:
-
-  | Thing                                                           | Style            | Example                                   |
-  | --------------------------------------------------------------- | ---------------- | ----------------------------------------- |
-  | Types, methods, properties, public fields, events, constants    | PascalCase       | `CargoModule`, `Deliver()`, `MaxCapacity` |
-  | Interfaces                                                      | `I` + PascalCase | `IEffect`                                 |
-  | Private fields, including `[SerializeField] private` and static | `_camelCase`     | `_turnRate`                               |
-  | Locals and parameters                                           | camelCase        | `targetAddress`                           |
-- Names are full words: `_parcelSpawner`, not `_ps`.
-- One top-level type per file, named after the type.
-- Namespaces are `SnakeMail.<Area>`, after the repo, so they don't change if the game is renamed. They match the folder under `Assets/_Game/Scripts/` (`SnakeMail.Snake`, `SnakeMail.MailRoom`).
-- Braces on their own line, and always use braces, even for one-line `if` bodies.
-- Order inside a class: constants, serialized fields, private fields, properties, Unity messages (`Awake`, `OnEnable`, `Update`...), public methods, private methods.
-- No magic numbers. A number that means something gets a name: a `const`, a serialized field or a value in a config asset.
-
-### Unity
-
-- One responsibility per component. A snake that moves, collects and takes damage is three components.
-- Serialized fields are `[SerializeField] private`. Other scripts read them through a property. When renaming one, keep the Inspector values with `[FormerlySerializedAs("oldName")]`.
-- Fail loudly and early. Check required references in `Awake`, log a clear error and disable the component, or use `[RequireComponent]`. Don't scatter null checks through the code.
-- Wire references in the Inspector. No `GameObject.Find` or `FindObjectOfType` for setup. Cache `GetComponent` results in `Awake`; never call it every frame.
-- Never write to a ScriptableObject definition at runtime. In the Editor, Play Mode changes to an asset are saved to disk. Cooldowns, charges and other live values go on a runtime object.
-- Keep game rules and formulas (capacity math, XP curve, payouts) in plain C# classes, so they can have Edit Mode tests.
-- Don't assume a run starts when the scene loads. Anything holding run state must reset cleanly for the next run.
-- Mobile: no allocations in per-frame code during a run (no LINQ, string building or `new` collections in `Update`). Profile on a phone before reaching for Jobs or Burst.
-
-### Assets and scenes
-
-- `Assets/_Game/`: our code and assets, in `Scripts/<Area>/`, `Prefabs/`, `Scenes/` (test scenes in `Scenes/Test/`), `Config/`, `Art/`, `Audio/`, and `Tests/EditMode/<Area>/`. Create each folder in Unity when its first file arrives; Git doesn't keep empty folders.
-- `Assets/ThirdParty/`: copied third-party code, each with its licence file.
-- One owner per scene. Everyone else works in their own test scene: `Scenes/Test/Test_<Name>.unity`.
-
-### Comments and logging
-
-- Comments explain why, not what: a reason, a constraint or a trap the code can't show.
-- No commented-out code; Git keeps the old version.
-- `TODO` comments name a person: `// TODO(Kylee): move to config`.
-- Pass the object as context: `Debug.LogError(message, this)`. Error messages name the GameObject, the component and what is missing: `"Snake: SnakeMovement has no MovementConfig assigned."`
-- Log state changes, not every frame.
-
-### Git
-
-- Commit messages are plain imperative sentences, a few words, one or two sentences at most: `Add parcel pickup to the snake head`.
-- Always commit `.meta` files together with their assets.
-- Images, audio, fonts and models go through Git LFS (set up in `.gitattributes`). Run `git lfs install` once on each machine before cloning.
-- Never commit `Library/`, `Temp/`, `Logs/`, `UserSettings/`, builds or keystores. `.gitignore` covers them.
+- Use `@Ponytail` for implementation and architectural reviews when available; apply its simplicity-first principles even when the plugin cannot be invoked. Prefer built-in Unity features over a new dependency or bespoke abstraction.
+- Use `the-writing-whip` when available for substantial documentation or project communication. Keep prose direct and do not let stylistic tooling override technical accuracy.
+- Before edits, inspect relevant code paths, assets, tests, and Git changes. Preserve unrelated work and keep changes reviewable. Fix root causes rather than patching symptoms in multiple places.
+- Do not change packages, project settings, build profiles, or backend configuration incidentally. Change them when the feature needs it, and explain the reason.
+- Run the smallest meaningful verification available (Edit Mode/Play Mode tests, scene check, or device profiling as appropriate). Never claim a Unity test, Editor validation, or Android build ran unless it did; report any remaining manual steps precisely.
+- Never commit secrets or generated Unity caches. Keep `.meta` files alongside their assets. Do not stage, commit, or discard the user's work unless requested.

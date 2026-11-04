@@ -1,4 +1,4 @@
-# Pitch: Snake-post
+# Pitch: Snake Post (working title)
 
 Genre: Roguelike, hybrid-casual arcade
 Platform: Android
