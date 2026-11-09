@@ -148,7 +148,11 @@ controllable on a phone.
 *Decisions already established*
 
 - Parcels make the snake longer; correctly delivered parcels make it
-  shorter.
+  shorter. Colliding with a hazard or the snake's own body removes one
+  carried Parcel segment without awarding a delivery.
+- When no deliverable Parcels remain, an empty-cargo countdown runs.
+  Collecting a new Parcel resets the timer and stops the countdown;
+  expiration ends the run. Having zero Parcels is not immediate defeat.
 - Capacity is bounded. Longer snakes are harder to steer on a
   touchscreen.
 - The meta loop includes a shop, upgrade ownership and Upgrade Tiers, a starting
@@ -185,8 +189,9 @@ runs while an activated Effect expires according to its configuration.
 named promotion band used for PostShift salary.
 
 *Proposed details to test:* exact coin payouts, upgrade prices,
-number of starting lives, maximum safe snake length, random-event
-cadence, boss frequency, ad frequency, and PostShift score thresholds.
+empty-cargo countdown duration, collision recovery window, maximum
+safe snake length, random-event cadence, boss frequency, ad frequency,
+and PostShift score thresholds.
 The established sources for the
 30-second / six-symbol sorting task and the XP curve are identified below;
 our payout and monetization parameters are _illustrative_, not
@@ -213,7 +218,7 @@ empirically validated balance targets.
         PROGRESS --> COLLECT
       end
       LOAD --> START
-      PROGRESS --> END["Run ends"]
+      PROGRESS --> END["Run ends if empty-cargo countdown expires"]
       END --> HOME
       END --> WALLET
       END --> XP
@@ -230,48 +235,57 @@ empirically validated balance targets.
 <core-loop>
 == Flow of an active run
 <flow-of-an-active-run>
-+ *Start.* Spawn at a random valid location with purchased
-  owned upgrades with active starting Effects and the selected perks. The initial body
-  plus attached Cargo Perks determines starting length.
-+ *Collect.* Pick up a parcel from a resident if there is free
-  capacity. The parcel has a destination shape/address and adds
-  one removable snake segment.
-+ *Route and deliver.* Find the matching address. Deliver one or
-  more compatible parcels, shorten the snake by the number delivered,
-  credit coins, and increment delivery progress.
-+ *Progress.* A delivery-count milestone may offer a choice of
-  randomized Upgrade choices. Each eligible delivery may also roll for a
-  random event; a boss begins after a specified delivery threshold.
-+ *Survive.* Continue deliveries and boss encounters while lives
-  remain. A boss persists until defeated. When no lives remain, enter
-  the results screen and return to the meta loop.
++ *Start.* Spawn at a random valid location with owned starting Effects
+  and selected Perks. The base body and attached Cargo Perks determine
+  starting length. With no Parcel collected yet, the empty-cargo
+  countdown starts immediately.
++ *Collect.* Pick up a Parcel from a resident if capacity remains.
+  Its destination shape/address and removable body segment are added.
+  Every valid pickup resets the countdown to its full duration and
+  deactivates it while at least one Parcel is carried.
++ *Route and deliver.* Find matching addresses. Deliver compatible
+  Parcels, remove their segments, award coins, and advance delivery
+  progress. If the last Parcel is delivered, start a fresh countdown.
++ *Progress.* Delivery milestones may offer randomized Upgrades, roll
+  for a telegraphed event, or trigger a persistent boss encounter.
++ *Survive.* Bumping into a hazard, boss attack, or the snake's own body
+  removes one carried Parcel without a payout. If that was the last
+  Parcel, start the countdown; if already empty, there is no further
+  Parcel to lose. Collect a new Parcel before time expires or show
+  results. There is no lives pool.
 
 #figure(
   [
     ```mermaid
     flowchart TD
-      SPAWN["Start with selected loadout"] --> CHOICE{"Collect or deliver?"}
-      CHOICE -->|Collect| PICKUP["Pickup adds one parcel segment if space remains"]
+      SPAWN["Start empty: countdown running"] --> CHOICE{"Collect or deliver?"}
+      CHOICE -->|Collect| PICKUP["Pickup adds Parcel; reset and stop countdown"]
       PICKUP --> CHOICE
-      CHOICE -->|Deliver| DELIVER["Match address; remove corresponding parcels"]
+      CHOICE -->|Deliver| DELIVER["Deliver matching Parcels; remove segments"]
       DELIVER --> PAY["Credit coins and delivery progress"]
-      PAY --> CHECK["Check milestone, event roll, boss threshold"]
-      CHECK --> UP["Optional: choose one of three Upgrades"]
-      CHECK --> EVENT["Optional: telegraphed environment hazard"]
-      CHECK --> BOSS["Optional: boss until defeated"]
-      UP --> CHOICE
-      EVENT --> CHOICE
-      BOSS --> CHOICE
-      PICKUP -.-> DAMAGE["Collision or hazard: lose a life"]
-      EVENT -.-> DAMAGE
-      BOSS -.-> DAMAGE
-      DAMAGE --> ALIVE{"Lives remain?"}
-      ALIVE -->|Yes| CHOICE
-      ALIVE -->|No| RESULTS["End run; keep banked coins"]
+      PAY --> CHECK["Milestone, event roll, boss threshold"]
+      CHECK --> UP["Optional Upgrade choice"]
+      CHECK --> EVENT["Optional telegraphed hazard"]
+      CHECK --> BOSS["Optional persistent boss"]
+      CHECK --> STATUS{"Any Parcels left?"}
+      UP --> STATUS
+      EVENT --> STATUS
+      BOSS --> STATUS
+      PICKUP -.-> HIT["Hazard, boss, or self-collision"]
+      EVENT -.-> HIT
+      BOSS -.-> HIT
+      HIT --> HELD{"Parcel carried?"}
+      HELD -->|Yes| DROP["Drop and lose one Parcel; no delivery reward"]
+      DROP --> STATUS
+      HELD -->|No| EMPTY["Empty-cargo countdown running"]
+      STATUS -->|Yes| CHOICE
+      STATUS -->|No| EMPTY
+      EMPTY -->|Pickup before expiry| PICKUP
+      EMPTY -->|Timer expires| RESULTS["End run; keep earned coins"]
       classDef action fill:#313244,stroke:#89B4FA,color:#CDD6F4
       classDef danger fill:#45475A,stroke:#F38BA8,color:#CDD6F4
       class SPAWN,PICKUP,DELIVER,PAY,UP,RESULTS action
-      class EVENT,BOSS,DAMAGE danger
+      class EVENT,BOSS,HIT,DROP,EMPTY danger
     ```
   ],
   caption: [Core delivery, upgrade, hazard, and boss loop],
@@ -284,11 +298,33 @@ the carried parcels and their destinations readable without
 forcing precision taps while steering. A full snake cannot collect more
 parcels, but can still deliver and pursue objectives.
 
-*Delivery versus failure.* Coins are earned when a delivery
-succeeds, not when a parcel is picked up. Already earned coins remain
-yours even if the run ends in failure. Undelivered parcels are
-discarded on death. Damage consumes a life and grants a short recovery
-window; the exact collision behavior should be playtested.
+== Collision loss and empty-cargo countdown
+<collision-loss-and-empty-cargo-countdown>
+*Collision consequence.* An eligible bump into a hazard, obstacle,
+boss attack, or the snake's own body drops and removes exactly one
+carried Parcel segment. That Parcel is no longer deliverable and
+awards no coins or delivery progress. The permanent body and equipped
+Cargo Perks cannot be lost this way. Which Parcel is selected for loss,
+and whether dropped Parcels could be recovered, remain playtest
+decisions; the baseline treats the Parcel as lost from the run.
+Use a brief collision recovery window so sustained overlap cannot
+remove multiple Parcels in successive physics frames.
+
+*Empty-cargo state.* The countdown begins at full duration whenever
+the carried Parcel count becomes zero: at initial spawn, after the
+last successful delivery, or after a collision loses the last Parcel.
+An empty snake remains controllable and can collect a new Parcel.
+Every valid pickup refills the countdown to its full duration and
+deactivates it while any Parcel is carried. Further collisions while
+empty cannot instantly end the run: only countdown expiry causes
+ordinary defeat. Pause the countdown with gameplay-pausing menus.
+The duration and warnings are balance parameters, not fixed here.
+
+*Delivery versus failure.* Coins are earned on successful delivery,
+not pickup or Parcel loss. Already banked coins persist if the
+countdown expires; any undelivered Parcels are discarded at run end.
+Show the empty-cargo countdown clearly and make losing a Parcel
+visibly distinct from delivering it.
 
 == Run progression and rewards
 <run-progression-and-rewards>
@@ -298,12 +334,14 @@ window; the exact collision behavior should be playtested.
     align: (col, row) => (auto, auto, auto).at(col),
     inset: 6pt,
     [Trigger], [Player reward or consequence], [Lifetime],
-    [Parcel collected], [One segment added; capacity used], [Until delivered or run ends],
-    [Correct delivery], [Segment removed; coins awarded; progression advanced], [Coins persist across runs],
+    [Parcel collected], [Segment added; reset and deactivate countdown], [Until delivered, lost, or run ends],
+    [Correct delivery], [Segment removed; coins awarded; timer starts if empty], [Coins persist across runs],
+    [Hazard or self-collision], [Lose one carried Parcel; no delivery reward], [One loss per eligible bump],
+    [Zero carried Parcels], [Start full empty-cargo countdown], [Until pickup or expiry],
     [Upgrade milestone], [Pick one of three random upgrades], [Timed or until run end],
     [Event roll], [Hole, earthquake, fan, or another environment modifier], [Timed or run-long],
     [Boss threshold], [New persistent challenge; boss-specific reward on victory], [Until defeated or run ends],
-    [Lives depleted], [Results, banked earnings, return to home], [Ends current run],
+    [Empty-cargo timer expires], [Results, banked earnings, return to home], [Ends current run],
   )],
 )
 
@@ -570,7 +608,7 @@ salary band and does not block normal gameplay.
     [Shop category], [Purchase behavior], [Example],
     [Starting-stat Upgrades],
     [Purchase the next authored Upgrade Tier; retain ownership],
-    [Starting capacity; starting lives],
+    [Starting capacity; optional collision protection],
 
     [Perk unlocks], [One-time unlock; then equip for free], [Parcel Magnet],
     [Eligible Upgrade Tiers],
@@ -579,10 +617,6 @@ salary band and does not block normal gameplay.
 
     [Second passive perk slot], [One-time meta unlock], [Equip up to two passive perks],
     [Cosmetics], [One-time, no gameplay advantage], [Snake and parcel skins],
-    [Extra lives],
-    [Prefer owned starting-lives Upgrade Tiers],
-    [Optional run consumables only if they add a clear choice],
-
     [Daily challenges], [Earned reward source; not a paid purchase], [Complete deliveries under a capacity restriction],
     [PostShift + replay tickets],
     [One free shift daily; earned, ad, or optional IAP ticket for more],
@@ -603,8 +637,8 @@ between runs; Perk and cosmetic unlocks remain owned. Avoid a hidden
 order-dependent surcharge. Keep all gameplay Upgrades earnable through
 ordinary play.
 
-*Starting-stat Upgrade examples:* starting capacity, starting lives,
-optional small starting shield, or a modest delivery-income upgrade.
+*Starting-stat Upgrade examples:* starting capacity, optional
+collision protection, or a modest delivery-income upgrade.
 Starting capacity should have few Upgrade Tiers and a hard mobile-friendly cap.
 Do not sell upgrades that make navigation or visibility worse by
 default.
@@ -723,7 +757,7 @@ to stronger perks.
 
 *Daily challenges \(proposal).* Use clear gameplay goals: finish
 a run with no Cargo Perk, deliver parcels to three shape types, defeat
-a boss, or deliver a set number without taking damage. Give a modest,
+a boss, or deliver a set number without losing a Parcel to a collision. Give a modest,
 fixed coin payout or cosmetics. Do not require ad viewing or purchases.
 Avoid challenges that need an event the player cannot reasonably
 trigger. Daily PostShift is a separate activity; an optional daily
@@ -1177,7 +1211,6 @@ Avoid offering choices that already reached their configured tier cap.
     align: (col, row) => (auto, auto, auto, auto).at(col),
     inset: 6pt,
     [Upgrade], [Effect lifetime], [Example effect], [Rules],
-    [Extra Heart], [Until run ends], [+1 life or maximum health], [Persists until run ends; capped],
     [Capacity Increase], [Until run ends], [+1 capacity slot within hard cap], [Cannot exceed mobile maximum],
     [Speed Surge], [Timed], [Faster movement briefly], [A risk/reward choice; clearly show timer],
     [Shield], [Timed], [Short invulnerable window or one absorbed hit], [Cannot make bosses indefinitely safe],
@@ -1214,7 +1247,7 @@ are tunable data.
     [Earthquake / bumped table],
     [Briefly shifts the playable field or obstacles],
     [Short, timed],
-    [Warning; prevent immediate unavoidable deaths],
+    [Warning; prevent unavoidable Parcel losses and countdown expiry],
 
     [Fan / extreme wind],
     [Displaces or biases snake movement],
@@ -1224,7 +1257,7 @@ are tunable data.
     [Boss threat],
     [Persistent hazard with a defeat condition],
     [Until boss is defeated],
-    [Clear health/progress, safe telegraphs, meaningful victory reward],
+    [Clear boss health/progress, safe telegraphs, meaningful victory reward],
   )],
 )
 
@@ -1244,19 +1277,21 @@ are tunable data.
       Timed --> Boss: Threshold reached, defer hazard if needed
       Persistent --> Boss: Threshold reached
       Boss --> Normal: Boss defeated
-      Normal --> End: No lives left
-      Timed --> End: No lives left
-      Persistent --> End: No lives left
-      Boss --> End: No lives left
+      Normal --> End: Empty-cargo countdown expires
+      Timed --> End: Empty-cargo countdown expires
+      Persistent --> End: Empty-cargo countdown expires
+      Boss --> End: Empty-cargo countdown expires
       End --> [*]
     ```
   ],
   caption: [Timed hazards, persistent obstacles, and boss lifetime],
 )
 
-*Fairness constraints.* Telegraph before applying
-control-disrupting effects; cap simultaneous severe hazards; pause/defer
-a disruptive event during menus or an unskippable tutorial. Do not allow
+*Fairness constraints.* The empty-cargo countdown runs independently
+of environmental and boss states; those states cannot reset it.
+Telegraph before applying control-disrupting effects; cap simultaneous
+severe hazards; pause or defer a disruptive event during menus or an
+unskippable tutorial. Do not allow
 a random event to permanently block all delivery destinations. At a boss
 threshold, start or queue the boss so an unrelated extreme event cannot
 create an unwinnable situation. The boss is a persistent challenge and
@@ -1313,7 +1348,7 @@ desired time to first purchase and per-run earnings distributions.
       XP["Deliveries / PostShift: Career XP"] --> LEVEL["Career Level + Postal Rank"]
       LEVEL --> POSTSHIFT
       PAY --> LOADOUT["Second passive slot"]
-      PAY --> SKINS["Earnable skins; optional lives consumables"]
+      PAY --> SKINS["Earnable skins and cosmetics"]
       UPGRADES --> BETTER["Better next run"]
       LOADOUT --> BETTER
       SKINS --> BETTER
@@ -1353,7 +1388,7 @@ desired time to first purchase and per-run earnings distributions.
   incurs another fee.
 
 *Pricing approach.* Keep the first meaningful purchase reachable
-after a handful of successful deliveries. Price later capacity and starting-lives Upgrade Tiers higher than simple utility perks, and treat the second passive slot as a
+after a handful of successful deliveries. Price later capacity and collision-protection Upgrade Tiers higher than simple utility perks, and treat the second passive slot as a
 visible progression milestone. Prices and payouts should be tuned
 together using median and lower-percentile performance, not top-player
 earnings alone.
@@ -1459,10 +1494,10 @@ replace play-earned coins.
   Example (rounding to the nearest whole coin):
   $min(floor(0.25 dot 130 + 0.5), 50) = 33$. Preserve the initial 130
   coins whether the offer is accepted or skipped.
-- *Revive:* At the point of defeat, optionally offer one revive
-  per run with clear conditions. The game is frozen while the choice/ad
-  is shown. A revive should restore a predictable safe state, not
-  respawn into unavoidable death.
+- *Revive:* Optionally offer one revive after empty-cargo countdown
+  expiry. Pause gameplay while the choice/ad is shown. A revive must
+  restore a safe position and a full countdown, providing a genuine
+  chance to collect a Parcel, not a lives pool.
 - Show the exact reward before opt-in. If no ad is available, continue
   normally; never leave the player stuck. Reward grants must be
   idempotent; ad-unavailable or network-failure paths cannot erase
@@ -1531,7 +1566,7 @@ introducing ad SDKs. \[3\]
     [View correct sorts, PostShift salary, earned coins/XP, ticket balance],
     [Every shift pays; no daily coin cap or practice mode],
 
-    [Gameplay], [Steer, read destinations and carried parcels, deliver], [No ad overlays; legible targets and collision states],
+    [Gameplay], [Steer, read destinations and carried Parcels, deliver], [Show Parcel loss and empty-cargo countdown; no ad overlays],
     [Upgrade picker], [Choose one of three randomized upgrades], [Pause gameplay; large touch targets; durations shown],
     [Events / boss HUD], [Hazard warning, timer, boss progress], [Communicate risk before affecting steering],
     [Results],
@@ -1541,9 +1576,11 @@ introducing ad SDKs. \[3\]
 )
 
 *Onboarding order \(proposal).* First teach pick-up and growth;
-then show matching addresses and shrinking; then reveal capacity and the
-reason to deliver; then award the first coins and show a starter
-purchase. Unlock PostShift after the player recognizes at least
+then show matching addresses and shrinking; then explain that
+collisions and deliveries can leave the snake empty, starting a
+countdown reset by collecting another Parcel; then reveal capacity
+and the reason to deliver; then award the first coins and show a
+starter purchase. Unlock PostShift after the player recognizes at least
 two delivery shapes. Show the Career XP bar and Postal Rank after the
 first parcel delivery, then explain the daily free shift and replay
 tickets once PostShift becomes available. Introduce random upgrades after the core delivery concept is
@@ -1572,6 +1609,8 @@ and readable timers, not text-only alerts.
     [Passive perk slots], [1; unlockable 2], [Does the second passive slot create interesting builds?],
     [Cargo Perk cost], [1 capacity slot; no passive slot], [Is throughput reduction meaningful?],
     [Minimum room for parcels], [2 remaining after Cargo Perks], [Can every loadout complete deliveries?],
+    [Empty-cargo countdown duration], [TBD by playtest], [Enough time from spawn or last Parcel to get a pickup?],
+    [Collision recovery window], [TBD by playtest], [Prevent repeated loss from sustained contact?],
     [Base delivery payout], [10 coins / delivered parcel], [Time to first owned Upgrade],
     [Boss reward], [50 coins \(example)], [Risk and completion time],
     [Rewarded results bonus], [+25%, cap 50], [Avoid ad dominating progression],
@@ -1586,10 +1625,12 @@ and readable timers, not text-only alerts.
 == Measurement plan
 <measurement-plan>
 Measure deliveries per minute, banked coins per minute, snake length
-distribution, collision rate by length, survivability by loadout,
+distribution, collisions by length and cause (hazard or self), Parcels
+lost per collision, time spent empty, pickups during the countdown,
+countdown expiry rate, and survivability by loadout. Also measure
 career-level pacing, PostShift score and wrong-swipe distributions,
-skipped upgrade choices, boss outcomes, hazard-related losses, session
-length, and the share of runs ending at full capacity. For monetization,
+skipped upgrade choices, boss outcomes, session length, and the share
+of runs ending at full capacity. For monetization,
 also measure ad opt-in, interstitial exposure, abandonment after ads,
 purchase conversion, and progression for non-paying players. Compare
 lower-percentile, median, and skilled player cohorts.
@@ -1600,9 +1641,14 @@ lower-percentile, median, and skilled player cohorts.
   $R + P <= C$, $R <= C - 2$, and $A <= S <= 2$ after loadout or upgrade
   changes. Reject any mid-run capacity reduction that would break these
   limits; do not detach an equipped Cargo Perk mid-run.
-- Cargo Perks are fixed segments; delivered parcels are removable.
-  Equipping Cargo Perks never creates a shorter maximum-length snake
-  than equipping none.
+- Cargo Perks and base-body segments are fixed; delivered or
+  collision-lost Parcels are removable. A bump removes at most one
+  carried Parcel and awards no delivery. Equipping Cargo Perks never
+  creates a shorter maximum-length snake than equipping none.
+- Only the empty-cargo countdown ends an ordinary run. It starts
+  full whenever no Parcels are carried (including at spawn); any valid
+  pickup resets and disables it; while carrying Parcels it cannot
+  expire. Further collisions when empty never cause immediate defeat.
 - The current milestone pool has Effects configured to expire during or
   at run end. Ownership of purchased Upgrade unlocks and Upgrade Tiers,
   skins and wallet balance persists. Effect lifetime follows the content
@@ -1613,8 +1659,9 @@ lower-percentile, median, and skilled player cohorts.
   or results re-entry. Each shift earns the full performance payout
   exactly once; no daily coin ceiling applies. Under current prototype
   values, the per-shift currency maximum is 96 at the top Postal Rank.
-- Damage, upgrades, event selection, and ads cannot run concurrently in
-  ways that leave the snake moving behind a full-screen modal.
+- Collision processing and the empty-cargo countdown must pause
+  with gameplay behind full-screen modals. Sustained physics overlap
+  cannot repeatedly remove multiple Parcels without recovery.
 - Every random event maintains a valid path to an attainable destination
   or explicitly offers a safe fallback.
 - Offline play and ad load failure do not block core gameplay, normal
@@ -1626,15 +1673,17 @@ lower-percentile, median, and skilled player cohorts.
   on a small screen, and does the player choose which parcel to deliver?
 - Should the boss victory conclude a level or allow an endless delivery
   run to continue? The sketch currently suggests continuing.
-- Which hazards create enjoyable dexterity challenges without generating
-  unfair touchscreen deaths?
+- Which hazards and self-collisions challenge steering without
+  stripping Parcels unfairly? What countdown and collision-recovery
+  durations give enough time to find a pickup?
 - How quickly should the second passive slot unlock, and when does
   reserving multiple capacity slots for Cargo Perks outperform carrying more parcels?
 - Which perks genuinely benefit from tiers? Test Parcel Magnet
   and Tip Jar first, watch Safety Shield and Express Engine for balance
   problems, and leave unclear steering/sorting upgrades single-tier
   until a useful progression exists.
-- Does the economy need consumable lives at all? An owned starting-lives Upgrade may cover the intended need more cleanly.
+- Which carried Parcel falls off on collision (tailmost, hit segment,
+  or selected inventory item), and can a dropped Parcel be recovered?
 - Can players reliably swipe to six targets on small phones at
   20+ correct sorts per shift? Test target layout, direction mapping
   and 30-second threshold distribution.
