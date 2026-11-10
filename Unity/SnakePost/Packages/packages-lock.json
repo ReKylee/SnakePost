@@ -11,20 +11,6 @@
       },
       "hash": "422eb124051c81a9bc3f422ebf190703c5053514"
     },
-    "com.heurekagames.assethunterpro": {
-      "version": "file:com.heurekagames.assethunterpro",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {
-        "com.heurekagames.utils": "1.0.4"
-      }
-    },
-    "com.heurekagames.utils": {
-      "version": "file:com.heurekagames.utils",
-      "depth": 0,
-      "source": "embedded",
-      "dependencies": {}
-    },
     "com.singularitygroup.hotreload": {
       "version": "git+https://gitlab.hotreload.net/root/hot-reload-releases.git#1.13.26",
       "depth": 0,
