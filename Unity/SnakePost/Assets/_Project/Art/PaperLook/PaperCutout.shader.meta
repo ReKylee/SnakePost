@@ -1,0 +1,10 @@
+fileFormatVersion: 2
+guid: 88d6bb8984b355343a903e4e707ff07e
+ShaderImporter:
+  externalObjects: {}
+  defaultTextures:
+  - _PencilMap: {fileID: 2800000, guid: 8ca00e20acae9d948b1925bc9f814f48, type: 3}
+  nonModifiableTextures: []
+  userData: 
+  assetBundleName: 
+  assetBundleVariant: 
