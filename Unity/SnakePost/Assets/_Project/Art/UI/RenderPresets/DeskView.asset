@@ -1,0 +1,22 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: a22182119efe54640ad2c66e68df673c, type: 3}
+  m_Name: DeskView
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SnakePost.UIRendering.UiRenderView
+  cameraRotation: {x: 46.00001, y: -0, z: -0}
+  distance: 15
+  pixelsPerMeter: 240
+  padding: 8
+  lightRotation: {x: 43.999996, y: 318, z: 0}
+  lightColor: {r: 0.98039216, g: 0.8235294, b: 0.627451, a: 1}
+  lightIntensity: 1.05
+  shadowStrength: 0.55

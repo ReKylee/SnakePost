@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef33c2fd5e94b6745a79d71a6aca1eb4, type: 3}
+  m_Name: SpareSkin
+  m_EditorClassIdentifier: Assembly-CSharp::SnakePost.Upgrades.PerkDefinition
+  _displayName: Spare Skin
+  _description: Placeholder perk. Shed a scrape once per shift and keep your parcels.
+  _turntable:
+  - {fileID: 21300000, guid: 98b9b216082d8cd45b47c5a5fcc11370, type: 3}
+  - {fileID: 21300000, guid: 70929e3e35f6cb74eb796bff9b0b1b40, type: 3}
+  - {fileID: 21300000, guid: d009b2f7bd03ceb45a8f4a7e963c38af, type: 3}
+  - {fileID: 21300000, guid: 9a5cb113e7073924496258d28ddf540b, type: 3}
+  - {fileID: 21300000, guid: 503591b05955b9945aa70543b2dec4ad, type: 3}
+  - {fileID: 21300000, guid: fa06c9f12bf2af74a887b26751d9f976, type: 3}
+  - {fileID: 21300000, guid: 6b39a43d49b556043b48c05a3f9b3fa1, type: 3}
+  - {fileID: 21300000, guid: 91e3cf53c96cf964c9f3a8d66fc8984e, type: 3}
+  - {fileID: 21300000, guid: a38100eec0ea9cf429f2a23e92e722e0, type: 3}
+  - {fileID: 21300000, guid: deefa964d077829408f5a2835441ce0a, type: 3}
+  - {fileID: 21300000, guid: e0a575277d8ca40468303183dc8a3a52, type: 3}
+  - {fileID: 21300000, guid: 3e9694cde9427084fb044153c0c44df6, type: 3}
+  - {fileID: 21300000, guid: 5e89fd7c239153d44bdb166efb12e00c, type: 3}
+  - {fileID: 21300000, guid: f77917d287dbe344da3df8ffa19d098e, type: 3}
+  - {fileID: 21300000, guid: ca90c8f3ae3b73741ade7f5210ec782d, type: 3}
+  - {fileID: 21300000, guid: 5de53c7407f84da48b6cfd75bc3f843a, type: 3}

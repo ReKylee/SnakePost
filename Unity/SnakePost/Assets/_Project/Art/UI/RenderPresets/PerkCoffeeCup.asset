@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d4e26e296e166744bafb32dd3a4d9c2, type: 3}
+  m_Name: PerkCoffeeCup
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SnakePost.UIRendering.UiRender
+  model: {fileID: 7028453570925496755, guid: 7d6f746c43c6d6d4e9295c93d20a1570, type: 3}
+  view: {fileID: 11400000, guid: 9bcbc0483ba86c94e8710b23c7bbc348, type: 2}
+  modelRotation: {x: 353.34818, y: 12.175213, z: 355.51047}
+  modelScale: {x: 0.91304356, y: 0.9130435, z: 0.91304356}
+  category: Perks
+  animation: {fileID: 0}
+  clipRange: {x: 0, y: 1}
+  turntable: 1
+  frames: 16

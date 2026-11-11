@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d4e26e296e166744bafb32dd3a4d9c2, type: 3}
+  m_Name: CashStack
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SnakePost.UIRendering.UiRender
+  model: {fileID: 8145165572368467982, guid: 14b5a6056ae630a409750a15b471f9c9, type: 3}
+  view: {fileID: 11400000, guid: 9bcbc0483ba86c94e8710b23c7bbc348, type: 2}
+  modelRotation: {x: 13.64228, y: 355.11853, z: 4.2624774}
+  modelScale: {x: 0.99999994, y: 1, z: 0.99999994}
+  category: TopBar
+  animation: {fileID: 0}
+  clipRange: {x: 0, y: 1}
+  turntable: 0
+  frames: 1

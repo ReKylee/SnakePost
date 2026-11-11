@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d4e26e296e166744bafb32dd3a4d9c2, type: 3}
+  m_Name: ShoppingCart
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SnakePost.UIRendering.UiRender
+  model: {fileID: 6869113281801574879, guid: 022b1a129598dc14f9d84f82fabe328e, type: 3}
+  view: {fileID: 11400000, guid: 9bcbc0483ba86c94e8710b23c7bbc348, type: 2}
+  modelRotation: {x: 10.74043, y: 196.00468, z: 7.6039243}
+  modelScale: {x: 1.2173915, y: 1.2173914, z: 1.2173915}
+  category: Buttons
+  animation: {fileID: 0}
+  clipRange: {x: 0, y: 1}
+  turntable: 0
+  frames: 1

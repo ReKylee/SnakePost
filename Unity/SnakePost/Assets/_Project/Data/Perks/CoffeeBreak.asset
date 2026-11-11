@@ -1,0 +1,33 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: ef33c2fd5e94b6745a79d71a6aca1eb4, type: 3}
+  m_Name: CoffeeBreak
+  m_EditorClassIdentifier: Assembly-CSharp::SnakePost.Upgrades.PerkDefinition
+  _displayName: Coffee Break
+  _description: Placeholder perk. A warm cup before the shift keeps the courier going a little longer.
+  _turntable:
+  - {fileID: 21300000, guid: bafa7b77b06e58948bb88b215eb78d1d, type: 3}
+  - {fileID: 21300000, guid: ca929e8dcfc2f664ba6ea3ab1b5b8f5b, type: 3}
+  - {fileID: 21300000, guid: cd0061a9ec5711f4da150cddd51042c0, type: 3}
+  - {fileID: 21300000, guid: d89d503bfee1aeb499bd18924b3fe89e, type: 3}
+  - {fileID: 21300000, guid: f49670f005c479b499e3238692f220e9, type: 3}
+  - {fileID: 21300000, guid: c90e4274f406ec142a4892c0568c0e25, type: 3}
+  - {fileID: 21300000, guid: 9d8a0b24c84b13f4aa6c27367f416bcb, type: 3}
+  - {fileID: 21300000, guid: b8fea90accf2cb14083dc934eba6f86f, type: 3}
+  - {fileID: 21300000, guid: 2bc0722d67e7026488226fc28ae243eb, type: 3}
+  - {fileID: 21300000, guid: 086882ab18be3e54bb0e36bc4b710d44, type: 3}
+  - {fileID: 21300000, guid: 86a70bc49e6d3ef49842d7d021833f4e, type: 3}
+  - {fileID: 21300000, guid: 7e8fc97a9be49824fb811026e6ae82e0, type: 3}
+  - {fileID: 21300000, guid: 1fc7f9566152fcc459d0324e79d48fc3, type: 3}
+  - {fileID: 21300000, guid: 17376f388e8f49d4d9d93d284b2c4587, type: 3}
+  - {fileID: 21300000, guid: 5643e239a3e8fc145bc5fb5e29f5461a, type: 3}
+  - {fileID: 21300000, guid: 6ed85e9fed848d64595ac7a091d2a819, type: 3}

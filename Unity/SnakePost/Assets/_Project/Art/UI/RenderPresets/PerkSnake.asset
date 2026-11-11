@@ -1,0 +1,23 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d4e26e296e166744bafb32dd3a4d9c2, type: 3}
+  m_Name: PerkSnake
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SnakePost.UIRendering.UiRender
+  model: {fileID: 9112592894207576142, guid: e2b1cf7677cbc52469ab050a90c989da, type: 3}
+  view: {fileID: 11400000, guid: 9bcbc0483ba86c94e8710b23c7bbc348, type: 2}
+  modelRotation: {x: 4.4549303, y: 241.30632, z: 5.9228415}
+  modelScale: {x: 1.2173913, y: 1.2173914, z: 1.2173913}
+  category: Perks
+  animation: {fileID: 0}
+  clipRange: {x: 0, y: 1}
+  turntable: 1
+  frames: 16
