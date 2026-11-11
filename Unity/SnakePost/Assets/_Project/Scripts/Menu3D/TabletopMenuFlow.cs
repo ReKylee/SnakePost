@@ -5,19 +5,15 @@ using UnityEngine;
 namespace SnakePost.Menu3D
 {
     /// <summary>
-    /// Desk menu ↔ game world. Starting a run hides the menu UI, hops the snake into the hole in the table and
-    /// lets the dive camera follow it down to the world under the table; returning cuts back to the desk.
+    /// Desk menu ↔ game world. The desk camera dives through the hole after the snake, then hands off
+    /// to the outdoor camera at the same pose. Returning cuts directly back to the desk.
     /// </summary>
     public sealed class TabletopMenuFlow : MonoBehaviour
     {
         // The dive: the first part is the hop to the hole, the rest the fall to the world.
         private const float HopPart = .35f;
-        // The camera trails behind along the dive path (not straight above), so it passes through the hole too.
-        private const float CameraLag = .12f;
-        private const float CameraHeight = .5f;
 
         [SerializeField] private CinemachineCamera _deskCamera;
-        [SerializeField] private CinemachineCamera _diveCamera;
         [SerializeField] private CinemachineCamera _outdoorCamera;
         [SerializeField] private Camera _renderCamera;
         [SerializeField] private Light _sun;
@@ -36,6 +32,7 @@ namespace SnakePost.Menu3D
         [SerializeField, Range(.05f, 1f)] private float _snakeDeskScale = .35f;
         [SerializeField, Min(0f)] private float _hopHeight = 2.5f;
         [SerializeField, Min(.1f)] private float _diveSeconds = 2.2f;
+        [SerializeField, Min(.1f)] private float _cameraHoleClearance = 1f;
         [SerializeField, Min(.1f)] private float _slideSeconds = .85f;
 
         [Header("Lighting")]
@@ -52,12 +49,16 @@ namespace SnakePost.Menu3D
         private bool _outdoor;
         private bool _moving;
         private Vector3 _snakeWorldScale;
+        private Vector3 _deskCameraPosition;
+        private Quaternion _deskCameraRotation;
 
         private void Start()
         {
             _brain = _renderCamera.GetComponent<CinemachineBrain>();
             _defaultBlend = _brain.DefaultBlend;
             _snakeWorldScale = _snake.localScale;
+            _deskCameraPosition = _deskCamera.transform.position;
+            _deskCameraRotation = _deskCamera.transform.rotation;
             Prioritize(_deskCamera);
             PlaceSnakeOnDesk();
             ApplyLighting(0f);
@@ -76,8 +77,6 @@ namespace SnakePost.Menu3D
             var start = _snake.position;
             var hole = _hole.position;
             var land = _snakeLandingSpot.position;
-            PlaceDiveCamera(start, hole, land, 0f);
-            Prioritize(_diveCamera);
 
             _dive = LMotion.Create(0f, 1f, _diveSeconds)
                 .WithScheduler(MotionScheduler.UpdateIgnoreTimeScale)
@@ -85,7 +84,11 @@ namespace SnakePost.Menu3D
                 {
                     _snake.SetPositionAndRotation(land, _snakeLandingSpot.rotation);
                     _snake.localScale = _snakeWorldScale;
+                    MoveDeskCamera(hole, 1f);
+                    // The two cameras now share the same pose, so the handoff needs no blend.
+                    _brain.DefaultBlend = new CinemachineBlendDefinition(CinemachineBlendDefinition.Styles.Cut, 0f);
                     Prioritize(_outdoorCamera);
+                    _deskCamera.transform.SetPositionAndRotation(_deskCameraPosition, _deskCameraRotation);
                     _moving = false;
                 })
                 .Bind(t =>
@@ -93,7 +96,7 @@ namespace SnakePost.Menu3D
                     _snake.position = DivePath(start, hole, land, t);
                     // Desk-sized while hopping, world-sized on landing: the world under the table is the miniature you dive into.
                     _snake.localScale = Vector3.Lerp(_snakeWorldScale * _snakeDeskScale, _snakeWorldScale, Mathf.InverseLerp(HopPart, 1f, t));
-                    PlaceDiveCamera(start, hole, land, t);
+                    MoveDeskCamera(hole, t);
                 });
         }
 
@@ -120,8 +123,7 @@ namespace SnakePost.Menu3D
             _snake.localScale = _snakeWorldScale * _snakeDeskScale;
         }
 
-        // Hop up and over into the hole, then fall along the desk camera's line of sight to the world below,
-        // so both the snake and the trailing camera pass through the hole.
+        // Hop into the hole, then descend toward the landing spot in the world below.
         private Vector3 DivePath(Vector3 start, Vector3 hole, Vector3 land, float t)
         {
             if (t < HopPart)
@@ -134,18 +136,34 @@ namespace SnakePost.Menu3D
             return Vector3.Lerp(hole, land, fall * fall);
         }
 
-        private void PlaceDiveCamera(Vector3 start, Vector3 hole, Vector3 land, float t)
+        private void MoveDeskCamera(Vector3 hole, float t)
         {
-            var target = DivePath(start, hole, land, t);
-            var eye = DivePath(start, hole, land, Mathf.Max(0f, t - CameraLag)) + Vector3.up * CameraHeight;
-            // Forward as "up" keeps the top of the screen pointing the way the snake travels, as on the desk.
-            _diveCamera.transform.SetPositionAndRotation(eye, Quaternion.LookRotation(target - eye, Vector3.forward));
+            // Control points on opposite sides of the opening guide the camera through the hole,
+            // rather than blending straight through the solid tabletop.
+            var above = hole + Vector3.up * _cameraHoleClearance;
+            var below = hole - Vector3.up * _cameraHoleClearance;
+            var targetPosition = _outdoorCamera.transform.position;
+            var remaining = 1f - t;
+            var eye = remaining * remaining * remaining * _deskCameraPosition
+                + 3f * remaining * remaining * t * above
+                + 3f * remaining * t * t * below
+                + t * t * t * targetPosition;
+
+            var rotation = Quaternion.Slerp(_deskCameraRotation, _outdoorCamera.transform.rotation, t);
+            var toSnake = _snake.position - eye;
+            if (toSnake.sqrMagnitude > .001f)
+            {
+                // Follow the hop without changing either camera's authored framing at the endpoints.
+                var tracking = Quaternion.LookRotation(toSnake, Vector3.up);
+                rotation = Quaternion.Slerp(rotation, tracking, .6f * Mathf.Sin(Mathf.PI * t));
+            }
+
+            _deskCamera.transform.SetPositionAndRotation(eye, rotation);
         }
 
         private void Prioritize(CinemachineCamera live)
         {
             _deskCamera.Priority.Value = live == _deskCamera ? 20 : 0;
-            _diveCamera.Priority.Value = live == _diveCamera ? 20 : 0;
             _outdoorCamera.Priority.Value = live == _outdoorCamera ? 20 : 0;
         }
 
@@ -184,6 +202,9 @@ namespace SnakePost.Menu3D
             if (_lighting.IsActive()) _lighting.Cancel();
             if (_dive.IsActive()) _dive.Cancel();
             if (_fade.IsActive()) _fade.Cancel();
+
+            if (_brain != null)
+                _brain.DefaultBlend = _defaultBlend;
         }
     }
 }
