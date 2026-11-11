@@ -55,13 +55,14 @@ namespace SnakePost.Menu3D
         /// <summary>
         /// World position for an anchor. Without a surface, <paramref name="distance"/> is meters in front of the eye;
         /// with one, the point slides along the surface plane raised by <paramref name="distance"/>.
+        /// <paramref name="pixelNudge"/> shifts the result on screen, in screen pixels.
         /// </summary>
         public bool TryAnchorToWorld(Vector2 anchor, Vector2 offset, bool useSafeArea, float distance, Transform surface,
-            out Vector3 position)
+            out Vector3 position, Vector2 pixelNudge = default)
         {
             var screen = _camera.pixelRect;
             var area = AnchorArea(screen, useSafeArea);
-            var pixel = area.min + Vector2.Scale(anchor, area.size) + offset * ScaleFactor(screen);
+            var pixel = area.min + Vector2.Scale(anchor, area.size) + offset * ScaleFactor(screen) + pixelNudge;
             var ndc = new Vector2((pixel.x - screen.center.x) / (.5f * screen.width),
                 (pixel.y - screen.center.y) / (.5f * screen.height));
 
@@ -88,21 +89,36 @@ namespace SnakePost.Menu3D
             out Vector2 offset, out float distance)
         {
             var screen = _camera.pixelRect;
-            var local = Quaternion.Inverse(transform.rotation) * (position - transform.position);
-            var halfHeight = _camera.orthographic ? _camera.orthographicSize : local.z * TanHalfFov;
-            var halfWidth = halfHeight * screen.width / screen.height;
-
             offset = default;
-            distance = surface == null ? local.z : Vector3.Dot(position - surface.position, surface.up);
-            if (halfHeight <= 0f)
-                return false; // Behind the eye in perspective.
+            distance = surface == null
+                ? (Quaternion.Inverse(transform.rotation) * (position - transform.position)).z
+                : Vector3.Dot(position - surface.position, surface.up);
+            if (!TryWorldToPixel(position, out var pixel))
+                return false;
 
-            var pixel = new Vector2(screen.center.x + local.x / halfWidth * .5f * screen.width,
-                screen.center.y + local.y / halfHeight * .5f * screen.height);
             var area = AnchorArea(screen, useSafeArea);
             offset = (pixel - area.min - Vector2.Scale(anchor, area.size)) / ScaleFactor(screen);
             return true;
         }
+
+        /// <summary>Screen pixel where a world point appears, seen from this layout's eye.</summary>
+        public bool TryWorldToPixel(Vector3 position, out Vector2 pixel)
+        {
+            var screen = _camera.pixelRect;
+            var local = Quaternion.Inverse(transform.rotation) * (position - transform.position);
+            var halfHeight = _camera.orthographic ? _camera.orthographicSize : local.z * TanHalfFov;
+            var halfWidth = halfHeight * screen.width / screen.height;
+            pixel = default;
+            if (halfHeight <= 0f)
+                return false; // Behind the eye in perspective.
+
+            pixel = new Vector2(screen.center.x + local.x / halfWidth * .5f * screen.width,
+                screen.center.y + local.y / halfHeight * .5f * screen.height);
+            return true;
+        }
+
+        /// <summary>The screen area anchors are measured in, in pixels.</summary>
+        public Rect AnchorArea(bool useSafeArea) => AnchorArea(_camera.pixelRect, useSafeArea);
 
         private float TanHalfFov => Mathf.Tan(.5f * _camera.fieldOfView * Mathf.Deg2Rad);
 
@@ -149,13 +165,23 @@ namespace SnakePost.Menu3D
         {
             // Subscribe even without a camera: once one is assigned, its first render lays the anchors out.
             RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
+#if UNITY_EDITOR
+            UnityEditor.Undo.postprocessModifications += OnEditorModifications;
+#endif
             if (_camera != null)
                 Refresh();
             else if (Application.isPlaying)
                 Debug.LogError($"{nameof(ScreenLayout3D)} on '{name}' needs a camera to lay out its anchors.", this);
         }
 
-        private void OnDisable() => RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+        private void OnDisable()
+        {
+            RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;
+#if UNITY_EDITOR
+            UnityEditor.Undo.postprocessModifications -= OnEditorModifications;
+            UnityEditor.EditorApplication.delayCall -= RefreshAfterEdit;
+#endif
+        }
 
         // Unity has no resize event, so just before the camera renders, compare the few values that shape
         // the layout. Anchors move only when one changed; the check itself is a handful of compares.
@@ -174,14 +200,30 @@ namespace SnakePost.Menu3D
         }
 
 #if UNITY_EDITOR
-        private void Update()
+        // Edit mode only: a designer moving the eye (an Editor edit callback, not per frame) re-places the anchors.
+        private UnityEditor.UndoPropertyModification[] OnEditorModifications(UnityEditor.UndoPropertyModification[] modifications)
         {
-            // Edit mode only: moving the eye re-places the anchors so the Scene view stays truthful.
-            if (Application.isPlaying || !transform.hasChanged || !IsReady)
-                return;
+            if (Application.isPlaying)
+                return modifications;
 
-            transform.hasChanged = false;
-            Refresh();
+            foreach (var modification in modifications)
+            {
+                if (modification.currentValue?.target != transform)
+                    continue;
+
+                // The edit is applied after this callback returns.
+                UnityEditor.EditorApplication.delayCall -= RefreshAfterEdit;
+                UnityEditor.EditorApplication.delayCall += RefreshAfterEdit;
+                break;
+            }
+
+            return modifications;
+        }
+
+        private void RefreshAfterEdit()
+        {
+            if (this != null && IsReady)
+                Refresh();
         }
 #endif
     }
