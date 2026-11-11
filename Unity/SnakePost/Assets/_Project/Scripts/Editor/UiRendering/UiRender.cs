@@ -20,6 +20,8 @@ namespace SnakePost.UIRendering
         [SerializeField] internal string category = "Misc";
         [Tooltip("Shadow on the invisible ground. Off for things that hang or lean, like the corkboard and its notes.")]
         [SerializeField] internal bool groundShadow = true;
+        [Tooltip("Z rotation the UI gives this sprite. The light is turned the opposite way, so once rotated its shading and shadow match the other sprites.")]
+        [SerializeField] internal float uiRotation;
 
         [Header("Frames (optional)")]
         [Tooltip("Render frames of this clip, evenly spread over the Clip Range (e.g. the folder opening).")]

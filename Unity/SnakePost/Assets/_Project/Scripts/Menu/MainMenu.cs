@@ -13,7 +13,9 @@ namespace SnakePost.Menu
     public sealed class MainMenu : MonoBehaviour
     {
         [Header("Daily challenges")]
-        [Tooltip("The folder graphic. Rests at the screen edge; opens at Folder Open Spot.")]
+        [Tooltip("The folder at rest at the screen edge: its own upright render, so its shadow falls the right way. Hidden while the animated folder is out.")]
+        [SerializeField] private GameObject _folderButton;
+        [Tooltip("The animated folder. Hidden at rest; slides from where it sits (behind the button) to Folder Open Spot and opens.")]
         [SerializeField] private RectTransform _folder;
         [SerializeField] private SpriteFlipbook _folderFlipbook;
         [Tooltip("Where the open folder sits, how it's turned and how big it is (position, rotation, scale).")]
@@ -63,6 +65,7 @@ namespace SnakePost.Menu
 
             _perkPicker.SetActive(false);
             _folderBlocker.SetActive(false);
+            _folder.gameObject.SetActive(false);
             SetChallengesVisible(false);
         }
 
@@ -79,6 +82,8 @@ namespace SnakePost.Menu
             if (_folderOpen) return;
 
             _folderOpen = true;
+            _folderButton.SetActive(false);
+            _folder.gameObject.SetActive(true);
             _folderClosedPosition = _folder.position;
             _folderClosedRotation = _folder.localRotation;
             _folderClosedScale = _folder.localScale;
@@ -93,8 +98,12 @@ namespace SnakePost.Menu
 
             _folderOpen = false;
             SetChallengesVisible(false);
-            _folderFlipbook.Play(true, () => MoveFolder(_folderClosedPosition, _folderClosedRotation, _folderClosedScale,
-                () => _folderBlocker.SetActive(false)));
+            _folderFlipbook.Play(true, () => MoveFolder(_folderClosedPosition, _folderClosedRotation, _folderClosedScale, () =>
+            {
+                _folderBlocker.SetActive(false);
+                _folder.gameObject.SetActive(false);
+                _folderButton.SetActive(true);
+            }));
         }
 
         public void OpenPerkPicker(int slot)

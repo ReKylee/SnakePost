@@ -29,6 +29,8 @@ namespace SnakePost.UIRendering
         [Header("Shadow")]
         [Tooltip("Darkness of the shadow cast on the (invisible) ground under the model. 0 = no ground shadow.")]
         [SerializeField, Range(0f, 1f)] internal float shadowStrength = .55f;
+        [Tooltip("Pencil cross-hatching inside the shadow, like the paper shader draws shadows on the desk. 0 = flat shadow.")]
+        [SerializeField, Range(0f, 1f)] internal float shadowHatching = .75f;
 
         [ContextMenu("Copy From Scene Camera And Sun")]
         private void CopyFromScene()

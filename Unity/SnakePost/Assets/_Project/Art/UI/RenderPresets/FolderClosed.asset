@@ -1,0 +1,25 @@
+%YAML 1.1
+%TAG !u! tag:unity3d.com,2011:
+--- !u!114 &11400000
+MonoBehaviour:
+  m_ObjectHideFlags: 0
+  m_CorrespondingSourceObject: {fileID: 0}
+  m_PrefabInstance: {fileID: 0}
+  m_PrefabAsset: {fileID: 0}
+  m_GameObject: {fileID: 0}
+  m_Enabled: 1
+  m_EditorHideFlags: 0
+  m_Script: {fileID: 11500000, guid: 9d4e26e296e166744bafb32dd3a4d9c2, type: 3}
+  m_Name: FolderClosed
+  m_EditorClassIdentifier: Assembly-CSharp-Editor::SnakePost.UIRendering.UiRender
+  model: {fileID: 919132149155446097, guid: 0858cdd33c6505549ab28cebb745fd14, type: 3}
+  view: {fileID: 11400000, guid: 9bcbc0483ba86c94e8710b23c7bbc348, type: 2}
+  modelRotation: {x: 305.90897, y: 198.7255, z: 148.53676}
+  modelScale: {x: 1, y: 1, z: 1}
+  category: DailyChallenges
+  groundShadow: 1
+  uiRotation: 90
+  animation: {fileID: 9179599676763841531, guid: 0858cdd33c6505549ab28cebb745fd14, type: 3}
+  clipRange: {x: 0, y: 0.25}
+  turntable: 0
+  frames: 1
