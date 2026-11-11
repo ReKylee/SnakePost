@@ -1,6 +1,7 @@
 using System;
 using UnityEngine;
 using UnityEngine.Rendering;
+using UnityEngine.UI;
 
 namespace SnakePost.Menu3D
 {
@@ -18,7 +19,10 @@ namespace SnakePost.Menu3D
         [SerializeField] private Camera _camera;
         [Tooltip("Resolution that offsets and sizes are designed at, like CanvasScaler.")]
         [SerializeField] private Vector2 _referenceResolution = new(1080f, 1920f);
-        [Tooltip("Like CanvasScaler 'Match': 0 keeps sizes relative to screen width, 1 to screen height.")]
+        [Tooltip("Like CanvasScaler 'Screen Match Mode'. Expand: shrink on screens narrower than the reference, " +
+                 "never grow on wider ones (tablets). Match Width Or Height: blend set by the slider below.")]
+        [SerializeField] private CanvasScaler.ScreenMatchMode _screenMatchMode = CanvasScaler.ScreenMatchMode.MatchWidthOrHeight;
+        [Tooltip("Like CanvasScaler 'Match' (Match Width Or Height mode only): 0 keeps sizes relative to screen width, 1 to screen height.")]
         [SerializeField, Range(0f, 1f)] private float _matchWidthOrHeight;
 
         private Rect _laidOutScreen;
@@ -115,12 +119,17 @@ namespace SnakePost.Menu3D
             return (Vector3.zero, new Vector3(ndc.x * tan * aspect, ndc.y * tan, 1f));
         }
 
-        // CanvasScaler's "Scale With Screen Size" + "Match Width Or Height" formula, so designers get the same behavior.
+        // CanvasScaler's "Scale With Screen Size" formulas, so designers get the same behavior as their UI.
         private float ScaleFactor(Rect screen)
         {
-            var width = Mathf.Log(screen.width / _referenceResolution.x, 2f);
-            var height = Mathf.Log(screen.height / _referenceResolution.y, 2f);
-            return Mathf.Pow(2f, Mathf.Lerp(width, height, _matchWidthOrHeight));
+            var width = screen.width / _referenceResolution.x;
+            var height = screen.height / _referenceResolution.y;
+            return _screenMatchMode switch
+            {
+                CanvasScaler.ScreenMatchMode.Expand => Mathf.Min(width, height),
+                CanvasScaler.ScreenMatchMode.Shrink => Mathf.Max(width, height),
+                _ => Mathf.Pow(2f, Mathf.Lerp(Mathf.Log(width, 2f), Mathf.Log(height, 2f), _matchWidthOrHeight))
+            };
         }
 
         private static Rect AnchorArea(Rect screen, bool useSafeArea)
@@ -134,16 +143,16 @@ namespace SnakePost.Menu3D
             return max.x > min.x && max.y > min.y ? Rect.MinMaxRect(min.x, min.y, max.x, max.y) : screen;
         }
 
+        private void Reset() => _camera = Camera.main;
+
         private void OnEnable()
         {
-            if (_camera == null)
-            {
-                Debug.LogError($"{nameof(ScreenLayout3D)} on '{name}' needs a camera to lay out its anchors.", this);
-                return;
-            }
-
+            // Subscribe even without a camera: once one is assigned, its first render lays the anchors out.
             RenderPipelineManager.beginCameraRendering += OnBeginCameraRendering;
-            Refresh();
+            if (_camera != null)
+                Refresh();
+            else if (Application.isPlaying)
+                Debug.LogError($"{nameof(ScreenLayout3D)} on '{name}' needs a camera to lay out its anchors.", this);
         }
 
         private void OnDisable() => RenderPipelineManager.beginCameraRendering -= OnBeginCameraRendering;

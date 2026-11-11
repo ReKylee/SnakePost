@@ -57,9 +57,19 @@ namespace SnakePost.Menu3D
                 return;
 
             Subscribe(); // The layout may have just been assigned in the Inspector.
-            if (_layout != null)
-                Apply();
+            if (_layout == null || !_layout.IsReady)
+                return;
+
+            // Like editing RectTransform anchors: changing what the object is measured from keeps it where it is.
+            if (_hasApplied && (_anchor != _appliedAnchor || _useSafeArea != _appliedUseSafeArea || _surface != _appliedSurface))
+                CaptureCurrentPlacement();
+            Apply();
         }
+
+        private bool _hasApplied;
+        private Vector2 _appliedAnchor;
+        private bool _appliedUseSafeArea;
+        private Transform _appliedSurface;
 
         private void Subscribe()
         {
@@ -98,6 +108,10 @@ namespace SnakePost.Menu3D
 
             // Our own move is not a designer edit; see Update.
             transform.hasChanged = false;
+            _hasApplied = true;
+            _appliedAnchor = _anchor;
+            _appliedUseSafeArea = _useSafeArea;
+            _appliedSurface = _surface;
         }
 
         private void CaptureCurrentPlacement()
