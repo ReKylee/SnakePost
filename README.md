@@ -12,3 +12,9 @@ A roguelike twist on Snake: collect parcels to grow, deliver them to matching ad
 1. Open the project in Unity 6 LTS or Unity 6.7.
 2. File → Build Profiles → Android → Switch Platform.
 3. Build and run on an Android phone.
+
+## Milestones
+
+| Milestone | Folder Link |
+| --------------- | --------------- |
+| Milestone 2 | |
