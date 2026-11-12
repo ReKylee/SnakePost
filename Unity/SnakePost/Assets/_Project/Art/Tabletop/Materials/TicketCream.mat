@@ -95,7 +95,7 @@ Material:
     - _ClearCoatMask: 0
     - _ClearCoatSmoothness: 0
     - _Cull: 2
-    - _CutEdgeBoxiness: 1
+    - _CutEdgeBoxiness: 0
     - _CutEdgeLit: 0.6
     - _CutEdgeWidth: 0.04
     - _Cutoff: 0.5

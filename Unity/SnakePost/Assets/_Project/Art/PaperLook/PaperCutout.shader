@@ -106,17 +106,19 @@ Shader "SnakePost/Paper Cutout"
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
+            // All full precision, as in URP's Lit: some drivers (Intel Iris Xe on D3D11) scramble half-precision
+            // interpolators, which turned the normals sideways and drew dark hatched streaks along triangle edges.
             struct Varyings
             {
                 float4 positionCS : SV_POSITION;
                 float3 positionWS : TEXCOORD0;
-                half3 normalWS : TEXCOORD1;
+                float3 normalWS : TEXCOORD1;
                 float2 uv : TEXCOORD2;
                 float3 pencilPosition : TEXCOORD3;
-                half3 normalOS : TEXCOORD4;
-                half4 ambientAndFog : TEXCOORD5;
+                float3 normalOS : TEXCOORD4;
+                float4 ambientAndFog : TEXCOORD5;
                 #if defined(_ADDITIONAL_LIGHTS_VERTEX)
-                half3 vertexLight : TEXCOORD6;
+                float3 vertexLight : TEXCOORD6;
                 #endif
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
@@ -218,7 +220,7 @@ Shader "SnakePost/Paper Cutout"
             {
                 float4 positionCS : SV_POSITION;
                 float2 pencilUV : TEXCOORD0;
-                half4 lightAndFog : TEXCOORD1;
+                float4 lightAndFog : TEXCOORD1; // full precision: see the note on the main pass's Varyings
                 UNITY_VERTEX_INPUT_INSTANCE_ID
             };
 
