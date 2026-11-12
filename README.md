@@ -17,4 +17,4 @@ A roguelike twist on Snake: collect parcels to grow, deliver them to matching ad
 
 | Milestone | Folder Link |
 | --------------- | --------------- |
-| Milestone 2 | |
+| Milestone 2 | [Here](https://github.com/ReKylee/SnakePost/tree/f1ebfc0dd64ab62f1620d1eb4eab5f539a7e8ded/Milestones/Milestone%202) |
