@@ -16,5 +16,13 @@ namespace _Project.Scripts.Services
             Debug.Log("Bootstrap ServiceProvider loaded");
             SceneManager.LoadScene("SnakeWorld");
         }
+
+        private async void OnApplicationPause(bool paused)
+        {
+            if (paused)
+            {
+                await ServiceProvider.Save.FlushAsync();
+            }
+        }
     }
 }

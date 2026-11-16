@@ -1,4 +1,6 @@
-﻿using System;
+#nullable enable
+
+using System;
 using System.Threading;
 using System.Threading.Tasks;
 using UnityEngine;
@@ -7,39 +9,58 @@ namespace _Project.Scripts.Services.Save
 {
     public sealed class PlayerPrefsSaveService : ISaveService
     {
-        public Task<T> GetAsync<T>(
-            string key, CancellationToken ct = default)
-        {
-            ct.ThrowIfCancellationRequested();
+        private const string KeyPrefix = "SnakePost_Demo_";
 
-            object value = typeof(T) switch
+        public ValueTask<T> LoadAsync<T>(SaveKey<T> key, CancellationToken cancellationToken = default)
+            where T : notnull
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            string storageKey = GetStorageKey(key);
+
+            object value = key switch
                            {
-                               var t when t == typeof(int)    => PlayerPrefs.GetInt(key),
-                               var t when t == typeof(float)  => PlayerPrefs.GetFloat(key),
-                               var t when t == typeof(string) => PlayerPrefs.GetString(key),
-                               var t when t == typeof(bool)   => PlayerPrefs.GetInt(key) != 0,
-                               _ => throw new NotSupportedException(
-                                   $"Unsupported save type: {typeof(T)}")
+                               SaveKey<int> entry    => PlayerPrefs.GetInt(storageKey, entry.DefaultValue),
+                               SaveKey<float> entry  => PlayerPrefs.GetFloat(storageKey, entry.DefaultValue),
+                               SaveKey<string> entry => PlayerPrefs.GetString(storageKey, entry.DefaultValue),
+                               SaveKey<bool> entry   => PlayerPrefs.GetInt(storageKey, entry.DefaultValue ? 1 : 0) != 0,
+                               _                     => throw UnsupportedType<T>()
                            };
 
-            return Task.FromResult((T)value);
+            return new((T)value);
         }
 
-        public Task SetAsync<T>(
-            string key, T value, CancellationToken ct = default)
+        /// <summary>
+        ///     Updates the value in memory until preferences are flushed.
+        /// </summary>
+        public ValueTask SaveAsync<T>(SaveKey<T> key, T value, CancellationToken cancellationToken = default)
+            where T : notnull
         {
-            ct.ThrowIfCancellationRequested();
+            cancellationToken.ThrowIfCancellationRequested();
+            string storageKey = GetStorageKey(key);
 
-            switch (value)
+            switch (key, value)
             {
-                case int i:    PlayerPrefs.SetInt(key, i); break;
-                case float f:  PlayerPrefs.SetFloat(key, f); break;
-                case string s: PlayerPrefs.SetString(key, s); break;
-                case bool b:   PlayerPrefs.SetInt(key, b ? 1 : 0); break;
-                default:       throw new NotSupportedException($"Unsupported save type: {typeof(T)}");
+                case (SaveKey<int>, int number):     PlayerPrefs.SetInt(storageKey, number); break;
+                case (SaveKey<float>, float number): PlayerPrefs.SetFloat(storageKey, number); break;
+                case (SaveKey<string>, string text): PlayerPrefs.SetString(storageKey, text); break;
+                case (SaveKey<bool>, bool flag):     PlayerPrefs.SetInt(storageKey, flag ? 1 : 0); break;
+                case (_, null):                      throw new ArgumentNullException(nameof(value));
+                default:                             throw UnsupportedType<T>();
             }
 
-            return Task.CompletedTask;
+            return default;
         }
+
+        public ValueTask FlushAsync(CancellationToken cancellationToken = default)
+        {
+            cancellationToken.ThrowIfCancellationRequested();
+            PlayerPrefs.Save();
+            return default;
+        }
+
+        private static string GetStorageKey<T>(SaveKey<T> key) where T : notnull =>
+            KeyPrefix + (key ?? throw new ArgumentNullException(nameof(key))).Name;
+
+        private static NotSupportedException UnsupportedType<T>() => new($"PlayerPrefs cannot store {typeof(T).Name}.");
     }
 }

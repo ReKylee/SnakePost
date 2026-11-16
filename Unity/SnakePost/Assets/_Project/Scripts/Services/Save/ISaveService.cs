@@ -1,12 +1,17 @@
-﻿using System.Threading;
+#nullable enable
+
+using System.Threading;
 using System.Threading.Tasks;
 
 namespace _Project.Scripts.Services.Save
 {
     public interface ISaveService
     {
-        Task<T> GetAsync<T>(string key, CancellationToken ct = default);
+        ValueTask<T> LoadAsync<T>(SaveKey<T> key, CancellationToken cancellationToken = default) where T : notnull;
 
-        Task SetAsync<T>(string key, T value, CancellationToken ct = default);
+        ValueTask SaveAsync<T>(SaveKey<T> key, T value, CancellationToken cancellationToken = default)
+            where T : notnull;
+
+        ValueTask FlushAsync(CancellationToken cancellationToken = default);
     }
 }

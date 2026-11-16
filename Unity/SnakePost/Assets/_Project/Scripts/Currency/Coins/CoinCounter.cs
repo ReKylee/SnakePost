@@ -1,4 +1,5 @@
-﻿using _Project.Scripts.Services;
+using _Project.Scripts.Services;
+using _Project.Scripts.Services.Save;
 using TMPro;
 using UnityEngine;
 
@@ -8,14 +9,20 @@ namespace _Project.Scripts.Currency.Coins
     {
         [SerializeField] private TMP_Text coinCounter;
 
-        private void Start() => Show();
+        private async void Start() => ShowBalance(await ServiceProvider.Save.LoadAsync(SaveKeys.Coins));
 
-        private void Show() => coinCounter.text = ServiceProvider.Save.GetAsync<int>("Coins").Result.ToString();
-
-        public void Add(int amount)
+        public async void Add(int amount)
         {
-            ServiceProvider.Save.SetAsync("Coins", amount + ServiceProvider.Save.GetAsync<int>("Coins").Result);
-            Show();
+            ISaveService save = ServiceProvider.Save;
+            int balance = checked(await save.LoadAsync(SaveKeys.Coins) + amount);
+            await save.SaveAsync(SaveKeys.Coins, balance);
+            ShowBalance(balance);
+        }
+
+        private void ShowBalance(int balance)
+        {
+            if (coinCounter)
+                coinCounter.text = balance.ToString();
         }
     }
 }
