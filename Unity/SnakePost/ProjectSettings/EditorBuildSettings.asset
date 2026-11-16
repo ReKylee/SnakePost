@@ -6,6 +6,9 @@ EditorBuildSettings:
   serializedVersion: 2
   m_Scenes:
   - enabled: 1
+    path: Assets/_Project/Scenes/Bootstrap.unity
+    guid: e130e6834a75c2f43848ded301e3e959
+  - enabled: 1
     path: Assets/_Project/Scenes/SnakeWorld.unity
     guid: c902b1b49b7a46c4a85b0333d6640abc
   m_configObjects:

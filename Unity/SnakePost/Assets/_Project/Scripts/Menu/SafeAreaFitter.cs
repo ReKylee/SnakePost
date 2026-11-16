@@ -1,11 +1,11 @@
 using UnityEngine;
 
-namespace SnakePost.Menu
+namespace _Project.Scripts.Menu
 {
     /// <summary>
-    /// Fits this RectTransform to the device safe area (notches, rounded corners), so UI placed inside it stays visible.
-    /// uGUI has no built-in safe-area component; this is the usual minimal one. Runtime only, so device-specific
-    /// anchors are never saved into the scene; preview notches with the Device Simulator in Play Mode.
+    ///     Fits this RectTransform to the device safe area (notches, rounded corners), so UI placed inside it stays visible.
+    ///     uGUI has no built-in safe-area component; this is the usual minimal one. Runtime only, so device-specific
+    ///     anchors are never saved into the scene; preview notches with the Device Simulator in Play Mode.
     /// </summary>
     [RequireComponent(typeof(RectTransform))]
     public sealed class SafeAreaFitter : MonoBehaviour
@@ -22,12 +22,14 @@ namespace SnakePost.Menu
             if (_rect == null)
                 _rect = (RectTransform)transform;
 
-            var safe = Screen.safeArea;
+            Rect safe = Screen.safeArea;
+
             if (Screen.width <= 0 || Screen.height <= 0)
                 return;
 
-            var min = new Vector2(safe.xMin / Screen.width, safe.yMin / Screen.height);
-            var max = new Vector2(safe.xMax / Screen.width, safe.yMax / Screen.height);
+            Vector2 min = new(safe.xMin / Screen.width, safe.yMin / Screen.height);
+            Vector2 max = new(safe.xMax / Screen.width, safe.yMax / Screen.height);
+
             if (_rect.anchorMin == min && _rect.anchorMax == max)
                 return;
 

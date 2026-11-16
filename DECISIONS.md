@@ -95,3 +95,20 @@ and all that data driven goodness)
 
 AI: Not Used.
 Who: Kylee & Peleg
+
+## 2026-11-16 Asynchronous ISaveService
+
+Chose: Asynchronous ISaveService because it works for both Synchronous and Async
+and cloud saves will need it later.
+
+AI: Not Used.
+Who: Kylee & Peleg
+
+## 2026-11-16 Initial Assembly Definitions
+
+Chose: Services and Currency since those are ones that we're pretty sure will
+stay for the rest of the project, unlike Menu/Menu3D and the Upgrades folder
+which are temporary.
+
+AI: Not Used.
+Who: Kylee & Peleg
