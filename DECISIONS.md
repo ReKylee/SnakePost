@@ -112,3 +112,17 @@ which are temporary.
 
 AI: Not Used.
 Who: Kylee & Peleg
+
+## 2026-11-18 Daily Reward Reset Time
+
+Chose: Reset the daily reward at 00:00 UTC instead of the phone's local time so the player can't claim more than once by changing their device's time zone.
+
+AI: Used to assist in code and explain.
+Who: Peleg
+
+## 2026-11-18 Meta Assembly Definition
+
+Chose: A Meta assembly definition, because meta features like the daily reward will stay for the rest of the project.
+
+AI: Used.
+Who: Peleg
