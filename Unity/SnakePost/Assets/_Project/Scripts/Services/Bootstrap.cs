@@ -1,3 +1,4 @@
+using _Project.Scripts.Services.Config;
 using _Project.Scripts.Services.Save;
 using UnityEngine;
 using UnityEngine.SceneManagement;
@@ -12,6 +13,7 @@ namespace _Project.Scripts.Services
             DontDestroyOnLoad(gameObject);
 
             ServiceProvider.Save = new PlayerPrefsSaveService();
+            ServiceProvider.Config = new ScriptableObjectConfigService();
 
             Debug.Log("Bootstrap ServiceProvider loaded");
             SceneManager.LoadScene("SnakeWorld");
@@ -20,9 +22,7 @@ namespace _Project.Scripts.Services
         private async void OnApplicationPause(bool paused)
         {
             if (paused)
-            {
                 await ServiceProvider.Save.FlushAsync();
-            }
         }
     }
 }

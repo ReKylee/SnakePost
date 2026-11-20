@@ -1,25 +1,27 @@
 using System;
-using TMPro;
-using UnityEngine;
 using System.Threading.Tasks;
 using _Project.Scripts.Currency.Coins;
 using _Project.Scripts.Services;
 using _Project.Scripts.Services.Save;
+using TMPro;
+using UnityEngine;
 
 namespace _Project.Scripts.Meta.DailyReward
 {
     public class DailyReward : MonoBehaviour
     {
-        [SerializeField] CoinCounter coins;
-        [SerializeField] TMP_Text dailyRewardLabel;
+        [SerializeField] private CoinCounter coins;
+        [SerializeField] private TMP_Text dailyRewardLabel;
         [SerializeField] private int reward = 50;
 
+        private static int Today
+        {
+            get => (int)(DateTime.UtcNow - DateTime.UnixEpoch).TotalDays; // UTC day number
+        }
 
-        private static int Today => (int)(DateTime.UtcNow - DateTime.UnixEpoch).TotalDays;   // UTC day number
-    
         private async void Start() => Show(await ClaimedTodayAsync());
 
-        public async void Claim()                         // On Click () → DailyReward.Claim
+        public async void Claim()
         {
             if (await ClaimedTodayAsync()) return;
             await ServiceProvider.Save.SaveAsync(SaveKeys.DailyRewardLastDay, Today);
@@ -27,7 +29,7 @@ namespace _Project.Scripts.Meta.DailyReward
             Show(true);
         }
 
-        [ContextMenu("Reset daily")]                // right-click the component to test
+        [ContextMenu("Reset daily")]
         private async void ResetDaily()
         {
             await ServiceProvider.Save.SaveAsync(SaveKeys.DailyRewardLastDay, 0);
